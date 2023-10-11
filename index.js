@@ -12,3 +12,35 @@ I need this code, but don't know where, perhaps should make some middleware, don
 
 Pull your server into this file and start it!
 */
+// index.js (or server.js)
+
+const express = require('express');
+const { logger, errorHandler } = require('./api/projects/projects-middleware.js');
+const projectsRouter = require('./api/projects/projects-router.js');
+const actionsRouter = require('./api/actions/actions-router');
+
+const server = express();
+
+// Middleware
+server.use(express.json()); // Parse JSON request bodies
+server.use(logger); // Use the logger middleware for all requests
+
+// Routers
+server.use('/api/projects', projectsRouter);
+server.use('/api/actions', actionsRouter);
+
+// Error handling middleware
+server.use(errorHandler);
+
+// Start the server
+const port = process.env.PORT || 9000;
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
+// Configure your server here
+// Build your actions router in /api/actions/actions-router.js
+// Build your projects router in /api/projects/projects-router.js
+// Do NOT `server.listen()` inside this file!
+
+module.exports = server;
