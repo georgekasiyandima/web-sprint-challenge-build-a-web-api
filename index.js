@@ -15,6 +15,7 @@ Pull your server into this file and start it!
 // index.js (or server.js)
 
 const express = require('express');
+const morgan = require('morgan');
 const { logger, errorHandler } = require('./api/projects/projects-middleware.js');
 const projectsRouter = require('./api/projects/projects-router.js');
 const actionsRouter = require('./api/actions/actions-router');
@@ -28,6 +29,7 @@ server.use(logger); // Use the logger middleware for all requests
 // Routers
 server.use('/api/projects', projectsRouter);
 server.use('/api/actions', actionsRouter);
+server.use(morgan('dev'));
 
 // Error handling middleware
 server.use(errorHandler);

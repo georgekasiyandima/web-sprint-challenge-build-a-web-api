@@ -1,104 +1,114 @@
-// api/projects/projects-router.js
-
-const express = require('express');
-const Projects = require('./projects-model');
+const express = require("express");
+const Projects = require("./projects-model");
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-  try {
-    const projects = await Projects.get();
-    res.status(200).json(projects);
-  } catch (error) {
-    res.status(500).json({ message: 'Error retrieving projects' });
-  }
-});
+const { logger, errorHandler } = require("./projects-middleware.js");
 
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const project = await Projects.get(id);
+// Apply logger middleware to all routes in the router
+router.use(logger);
 
-    if (project) {
-      res.status(200).json(project);
-    } else {
-      res.status(404).json({ message: 'Project not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Error retrieving project' });
-  }
-});
+async function getAllProjects(req, res, next) {
+try {
+const projects = await Projects.get();
+res.status(200).json(projects);
+} catch (error) {
+next(error);
+}
+}
 
-router.post('/', async (req, res) => {
-  try {
-    const { name, description, completed } = req.body;
+async function getProjectById(req, res, next) {
+try {
+const { id } = req.params;
+const project = await Projects.get(id);
 
-    if (!name || !description || name.trim() === '' || description.trim() === '') {
-      res.status(400).json({ message: 'Name and description are required' });
-      return;
-    }
+if (project) {
+  res.status(200).json(project);
+} else {
+  res.status(404).json({ message: "Project not found" });
+}
+} catch (error) {
+next(error);
+}
+}
 
-    const newProject = await Projects.insert({ name, description, completed });
-    res.status(201).json(newProject);
-  } catch (error) {
-    res.status(500).json({ message: 'Error creating project' });
-  }
-});
+async function createProject(req, res, next) {
+try {
+const { name, description, completed } = req.body;
 
-router.put('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, description, completed } = req.body;
 
-    if (!name || !description || name.trim() === '' || description.trim() === '') {
-      res.status(400).json({ message: 'Name and description are required' });
-      return;
-    }
+if (!name || !description || name.trim() === "" || description.trim() === "") {
+  res.status(400).json({ message: "Name and description are required" });
 
-    const updatedProject = await Projects.update(id, {
-      name,
-      description,
-      completed,
-    });
+}
 
-    if (updatedProject) {
-      res.status(200).json(updatedProject);
-    } else {
-      res.status(404).json({ message: 'Project not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating project' });
-  }
-});
+const newProject = await Projects.insert({ name, description, completed });
+const project = await Projects.get(newProject.id);
+res.status(200).json(project);
+} catch (error) {
+next(error);
+}
+}
 
-router.delete('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deletedCount = await Projects.remove(id);
+async function updateProject(req, res, next) {
+try {
+const { id } = req.params;
+const { name, description, completed } = req.body;
 
-    if (deletedCount > 0) {
-      res.status(204).end();
-    } else {
-      res.status(404).json({ message: 'Project not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting project' });
-  }
-});
+if (!name || !description || name.trim() === "" || description.trim() === "") {
+  res.status(400).json({ message: "Name and description are required" });
+  return;
+}
 
-router.get('/:id/actions', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const actions = await Projects.getProjectActions(id);
+const updatedProject = await Projects.update(id, { name, description, completed });
 
-    if (actions) {
-      res.status(200).json(actions);
-    } else {
-      res.status(404).json({ message: 'Project not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Error retrieving actions' });
-  }
-});
+if (updatedProject) {
+  res.status(200).json(updatedProject);
+} else {
+  res.status(404).json({ message: "Project not found" });
+}
+} catch (error) {
+next(error);
+}
+}
+
+async function deleteProject(req, res, next) {
+try {
+const { id } = req.params;
+const deletedCount = await Projects.remove(id);
+
+if (deletedCount > 0) {
+  res.status(204).end();
+} else {
+  res.status(404).json({ message: "Project not found" });
+}
+} catch (error) {
+next(error);
+}
+}
+
+async function getProjectActions(req, res, next) {
+try {
+const { id } = req.params;
+const actions = await Projects.getProjectActions(id);
+
+if (actions) {
+  res.status(200).json(actions);
+} else {
+  res.status(404).json({ message: "Project not found" });
+}
+} catch (error) {
+next(error);
+}
+}
+
+router.get("/", getAllProjects);
+router.get("/:id", getProjectById);
+router.post("/", createProject);
+router.put("/:id", updateProject);
+router.delete("/:id", deleteProject);
+router.get("/:id/actions", getProjectActions);
+
+router.use(errorHandler);
 
 module.exports = router;

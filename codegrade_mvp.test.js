@@ -46,6 +46,9 @@ describe('server.js', () => {
     describe('[GET] /api/projects', () => {
       test('[1] sends back all projects that exist', async () => {
         const res = await request(server).get('/api/projects')
+        /* @ts-ignore */
+        console.log("---------------///////")
+        console.log(res.body);
         expect(res.body).toHaveLength(2)
         expect(res.body[0]).toMatchObject(projectA)
         expect(res.body[1]).toMatchObject(projectB)
@@ -60,6 +63,8 @@ describe('server.js', () => {
       test('[3] sends back the project with given id', async () => {
         const res1 = await request(server).get('/api/projects/1')
         const res2 = await request(server).get('/api/projects/2')
+        console.log(res1.body);
+        console.log(res2.body);
         expect(res1.body).toMatchObject(projectA)
         expect(res2.body).toMatchObject(projectB)
       }, 750)
@@ -72,6 +77,9 @@ describe('server.js', () => {
       test('[5] responds with the newly created project', async () => {
         const projectNew = { name: 'e', description: 'f', completed: true }
         const res = await request(server).post('/api/projects').send(projectNew)
+         /* @ts-ignore */
+        console.log("---------------///////")
+        console.log(res.status);
         expect(res.body).toMatchObject(projectNew)
       }, 750)
       test('[6] inserts a new project into projects table', async () => {
