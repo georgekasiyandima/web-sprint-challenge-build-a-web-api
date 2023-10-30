@@ -35,7 +35,7 @@ router.post('/', validateActionData, async (req, res, next) => {
       res.status(400).json({ message: 'Project ID, description, and notes are required' });
     } else {
       const newAction = await Actions.insert({ project_id, description, notes, completed });
-      res.status(201).json(newAction[0])
+      res.status(201).json(newAction)
     }
   } catch (error) {
     next(error);
