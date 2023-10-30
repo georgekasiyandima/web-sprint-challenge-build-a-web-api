@@ -1,118 +1,78 @@
 // api/actions/actions-router.js
+const express = require('express');
+const Actions = require('./actions-model');
+const { checkActionExists, validateActionData } = require('./actions-middleware');
 
-const express = require("express");
 const router = express.Router();
 
-const Actions = require("../actions/actions-model");
-const { logger, errorHandler } = require("../actions/actions-middleware");
-
-// Apply logger middleware to all routes in the router
-router.use(logger);
-
-// GET /api/actions
-router.get("/", getAllActions);
-// GET /api/actions/:id
-router.get("/:id", getActionById);
-// POST /api/actions
-router.post("/", createAction);
-// PUT /api/actions/:id
-router.put("/:id", updateAction);
-// DELETE /api/actions/:id
-router.delete("/:id", deleteAction);
-
-async function getAllActions(req, res, next) {
-try {
-const actions = await Actions.get();
-res.status(200).json(actions);
-next();
-} catch (error) {
-next(error);
-}
-}
-
-async function getActionById(req, res, next) {
-try {
-const { id } = req.params;
-const action = await Actions.get(id);
-
-if (!action) {
-  return res.status(404).json({ message: "Action not found" });
-}
-res.status(200).json(action);
-next();
-} catch (error) {
-next(error);
-}
-}
-
-async function createAction(req, res, next) {
-try {
-const { project_id, description, notes, completed } = req.body;
-
-if (!project_id || !description || !notes) {
-  return res.status(400).json({ message: "Missing required fields" });
-}
-
-const newAction = await Actions.insert({
-  project_id,
-  description,
-  notes,
-  completed: completed || false,
-});
-res.status(201).json(newAction);
-next();
-} catch (error) {
-next(error);
-}
-}
-
-async function updateAction(req, res, next) {
-try {
-const { id } = req.params;
-const { project_id, description, notes, completed } = req.body;
-
-if (!project_id || !description || !notes) {
-  return res.status(400).json({ message: "Missing required fields" });
-}
-
-const action = await Actions.get(id);
-
-if (!action) {
-  return res.status(404).json({ message: "Action not found" });
-}
-
-const updatedAction = await Actions.update(id, {
-  project_id,
-  description,
-  notes,
-  completed: completed || false,
+router.get('/', async (req, res, next) => {
+  try {
+    const actions = await Actions.get();
+    res.json(actions);
+  } catch (error) {
+    next(error);
+  }
 });
 
-res.status(200).json(updatedAction);
-next();
-} catch (error) {
-next(error);
-}
-}
+router.get('/:id', checkActionExists, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const action = await Actions.get(id);
+    if (action) {
+      res.json(action);
+    } else {
+      res.status(404).json({ message: `Action ${id} not found` });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 
-async function deleteAction(req, res, next) {
-try {
-const { id } = req.params;
-const action = await Actions.get(id);
+router.post('/', validateActionData, async (req, res, next) => {
+  try {
+    const { project_id, description, notes, completed } = req.body;
+    if (!project_id || !description || !notes || completed === undefined) {
+      res.status(400).json({ message: 'Project ID, description, and notes are required' });
+    } else {
+      const newAction = await Actions.insert({ project_id, description, notes, completed });
+      res.status(201).json(newAction[0])
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 
-if (!action) {
-  return res.status(404).json({ message: "Action not found" });
-}
+router.put('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { project_id, description, notes, completed } = req.body;
+    if (!project_id || !description || !notes || completed === undefined) {
+      res.status(400).json({ message: 'Project ID, description, and notes are required' });
+    } else {
+      const updatedAction = await Actions.update(id, { project_id, description, notes, completed });
+      if (updatedAction) {
+        res.json(updatedAction);
+      } else {
+        res.status(404).json({ message: `Action ${id} not found` });
+      }
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 
-await Actions.remove(id);
-
-res.status(204).end();
-next();
-} catch (error) {
-next(error);
-}
-}
-
-router.use(errorHandler);
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const deletedAction = await Actions.remove(id);
+    if (deletedAction) {
+      res.status(204).end();
+    } else {
+      res.status(404).json({ message: `Action ${id} not found` });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;

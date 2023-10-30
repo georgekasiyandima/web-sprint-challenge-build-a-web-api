@@ -16,23 +16,21 @@ Pull your server into this file and start it!
 
 const express = require('express');
 const morgan = require('morgan');
-const { logger, errorHandler } = require('./api/projects/projects-middleware.js');
+const { checkProject_id} = require('./api/projects/projects-middleware.js');
 const projectsRouter = require('./api/projects/projects-router.js');
 const actionsRouter = require('./api/actions/actions-router');
 
 const server = express();
 
 // Middleware
-server.use(express.json()); // Parse JSON request bodies
-server.use(logger); // Use the logger middleware for all requests
+server.use(express.json()); 
+server.use(checkProject_id); 
 
 // Routers
 server.use('/api/projects', projectsRouter);
 server.use('/api/actions', actionsRouter);
 server.use(morgan('dev'));
 
-// Error handling middleware
-server.use(errorHandler);
 
 // Start the server
 const port = process.env.PORT || 9000;

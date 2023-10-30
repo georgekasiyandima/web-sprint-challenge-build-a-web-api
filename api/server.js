@@ -9,11 +9,14 @@ function customMorgan(req, res, next) {
 
 const projectsRouter = require('./projects/projects-router.js');
 const actionRouter = require('./actions/actions-router.js');
+const { checkProjectExists } = require('./projects/projects-middleware.js');
 
 server.use('/api/projects', projectsRouter);
 server.use('/api/actions', actionRouter);
 server.use(morgan('dev'));
 server.use(customMorgan);
+server.use(checkProjectExists);
+
 
 
 
