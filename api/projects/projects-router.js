@@ -4,21 +4,15 @@ const Projects = require("./projects-model");
 const {
   checkProject_id,
   checkProjectExists,
-  validateProjectData,
 } = require("./projects-middleware");
 
 const router = express.Router();
 
-router.get("/", async (req, res, next) => {
-  try {
-    const projects = await Projects.get();
-    res.json(projects);
-  } catch (error) {
-    next(error);
-  }
+router.get("/:id?", checkProject_id, (req, res,) => {
+  res.json(req.project)
 });
 
-router.get(
+/*router.get(
   "/:id",
   [checkProject_id, checkProjectExists],
   async (req, res, next) => {
@@ -34,53 +28,27 @@ router.get(
       next(error);
     }
   }
-);
+);*/
 
-router.post("/", validateProjectData, async (req, res, next) => {
-  try {
-    const { name, description, completed } = req.body;
-    if (!name || !description || completed === undefined) {
-      res.status(400).json({ message: "Name and description are required" });
-    } else {
-      const newProject = await Projects.insert({
-        name,
-        description,
-        completed,
-        actions: [],
-      });
-      res.status(201).json(newProject[0])
-    }
-  } catch (error) {
-    next(error);
-  }
+router.post("/",  checkProjectExists, (req, res, next) => {
+  Projects.insert(req.body).then((project) => {
+    res.status(201).json(project);
+  }).catch(next);
 });
 
-router.put(
-  "/:id",
-  [checkProjectExists, validateProjectData],
-  async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { name, description, completed } = req.body;
-      if (!name || !description) {
-        res.status(400).json({ message: "Name and description are required" });
-      } else {
-        const updatedProject = await Projects.update(id, {
-          name,
-          description,
-          completed,
-        });
-        if (updatedProject) {
-          res.json(updatedProject);
-        } else {
-          res.status(404).json({ message: `Project ${id} not found` });
-        }
-      }
-    } catch (error) {
-      next(error);
-    }
+router.put("/:id", checkProject_id, checkProjectExists, (req, res, next) => {
+  const { completed } = req.body;
+  if (!completed && typeof completed !== "boolean") {
+    res.status(400).json({ message: "No completed boolean" });
+  } else {
+    Projects.update(req.params.id, req.body)
+      .then((project) => {
+        console.log(project)
+        res.status(200).json(project);
+      })
+      .catch(next);
   }
-);
+});
 
 router.delete("/:id", async (req, res, next) => {
   try {

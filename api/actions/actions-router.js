@@ -1,11 +1,14 @@
 // api/actions/actions-router.js
-const express = require('express');
-const Actions = require('./actions-model');
-const { checkActionExists, validateActionData } = require('./actions-middleware');
+const express = require("express");
+const Actions = require("./actions-model");
+const {
+  checkActionExists,
+  validateActionData,
+} = require("./actions-middleware");
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const actions = await Actions.get();
     res.json(actions);
@@ -14,7 +17,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/:id', checkActionExists, async (req, res, next) => {
+router.get("/:id", checkActionExists, async (req, res, next) => {
   try {
     const { id } = req.params;
     const action = await Actions.get(id);
@@ -28,28 +31,43 @@ router.get('/:id', checkActionExists, async (req, res, next) => {
   }
 });
 
-router.post('/', validateActionData, async (req, res, next) => {
+router.post("/", validateActionData, async (req, res, next) => {
   try {
     const { project_id, description, notes, completed } = req.body;
     if (!project_id || !description || !notes || completed === undefined) {
-      res.status(400).json({ message: 'Project ID, description, and notes are required' });
+      res
+        .status(400)
+        .json({ message: "Project ID, description, and notes are required" });
     } else {
-      const newAction = await Actions.insert({ project_id, description, notes, completed });
-      res.status(201).json(newAction)
+      const newAction = await Actions.insert({
+        project_id,
+        description,
+        notes,
+        completed,
+      });
+      console.log(newAction);
+      res.status(201).json(newAction);
     }
   } catch (error) {
     next(error);
   }
 });
 
-router.put('/:id', async (req, res, next) => {
+router.put("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const { project_id, description, notes, completed } = req.body;
     if (!project_id || !description || !notes || completed === undefined) {
-      res.status(400).json({ message: 'Project ID, description, and notes are required' });
+      res
+        .status(400)
+        .json({ message: "Project ID, description, and notes are required" });
     } else {
-      const updatedAction = await Actions.update(id, { project_id, description, notes, completed });
+      const updatedAction = await Actions.update(id, {
+        project_id,
+        description,
+        notes,
+        completed,
+      });
       if (updatedAction) {
         res.json(updatedAction);
       } else {
@@ -61,7 +79,7 @@ router.put('/:id', async (req, res, next) => {
   }
 });
 
-router.delete('/:id', async (req, res, next) => {
+router.delete("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const deletedAction = await Actions.remove(id);
