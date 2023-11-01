@@ -38,12 +38,11 @@ router.post("/",  checkProjectExists, (req, res, next) => {
 
 router.put("/:id", checkProject_id, checkProjectExists, (req, res, next) => {
   const { completed } = req.body;
-  if (!completed && typeof completed !== "boolean") {
+  if (typeof completed !== "boolean") {
     res.status(400).json({ message: "No completed boolean" });
   } else {
     Projects.update(req.params.id, req.body)
       .then((project) => {
-        console.log(project)
         res.status(200).json(project);
       })
       .catch(next);
