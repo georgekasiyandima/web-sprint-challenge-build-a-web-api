@@ -25,7 +25,7 @@ async function checkProjectExists(req, res, next) {
   if (!description || typeof description !== "string") {
     return res.status(400).json({ message: "Description required" });
   }
-  if (!completed || typeof completed !== "boolean") {
+  if (completed === undefined || typeof completed !== "boolean") {
     return res
       .status(400)
       .json({ message: "The completed status should be a boolean" });
